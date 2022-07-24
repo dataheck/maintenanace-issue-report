@@ -2,19 +2,16 @@ from dotenv import load_dotenv
 from github import Github
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from time import sleep
 import chromedriver_binary # pylint: disable=unused-import
 import json
 import os
 import selenium.webdriver.support.ui as ui
-import tempfile
 from functools import reduce
 
 PRINT_DIALOG_DELAY = 3000 # milliseconds
-PRINT_SAVE_DELAY = 500 # milliseconds
+PRINT_SAVE_DELAY = 500    # milliseconds
 INTERACTIVE_TIMEOUT = 320 # seconds
 
 load_dotenv()
@@ -94,10 +91,11 @@ class LoginTagHasValue(object):
 wait = ui.WebDriverWait(driver, timeout=INTERACTIVE_TIMEOUT)
 wait.until(LoginTagHasValue())
 
-#action = ActionChains(driver)
+issues = list()
 
 for card in project_column.get_cards():
     this_issue = card.get_content()
+    issues.append((this_issue.title, this_issue.number))
     driver.get(this_issue.html_url)
 
     try:
@@ -106,7 +104,7 @@ for card in project_column.get_cards():
         print("Title at target URL doesn't match; we might not be logged in.")
         break
 
-    #action.key_down(Keys.LEFT_CONTROL).send_keys("p").key_up(Keys.LEFT_CONTROL).perform() # trigger print dialog
     driver.execute_script("window.print();")
 
 driver.close()
+
