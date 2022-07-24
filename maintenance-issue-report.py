@@ -1,6 +1,10 @@
+from docx import Document
+import docx
 from dotenv import load_dotenv
-from github import Github
+from functools import reduce
+from github import Github, ProjectColumn
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -8,73 +12,84 @@ import chromedriver_binary # pylint: disable=unused-import
 import json
 import os
 import selenium.webdriver.support.ui as ui
-from functools import reduce
 
 PRINT_DIALOG_DELAY = 3000 # milliseconds
 PRINT_SAVE_DELAY = 500    # milliseconds
 INTERACTIVE_TIMEOUT = 320 # seconds
 
-load_dotenv()
+def process_configuration() -> dict:
+    load_dotenv()
 
-mandatory_configuration = ('GITHUB_API_KEY', 'GITHUB_ORGANIZATION','GITHUB_PROJECT_NAME', 'GITHUB_PROJECT_FINISHED_COLUMN', 'PDF_SAVE_PATH')
-config = dict()
+    mandatory_configuration = (
+        'GITHUB_API_KEY', 'GITHUB_ORGANIZATION','GITHUB_PROJECT_NAME', 'GITHUB_PROJECT_FINISHED_COLUMN', 
+        'PDF_SAVE_PATH', 'COVERPAGE_TEMPLATE_PATH', 'CLIENT_NAME', 'CLIENT_CONTACT', 'PROJECT_NAME', 'OUTPUT_PATH'
+    )
+    config = dict()
 
-for key in mandatory_configuration:
-    value = os.environ.get(key)
-    assert value is not None, f"Please set {key} before proceeding."
-    config[key] = value
+    for key in mandatory_configuration:
+        value = os.environ.get(key)
+        assert value is not None, f"Please set {key} before proceeding."
+        config[key] = value
+    
+    return config
 
-g = Github(config['GITHUB_API_KEY'])
-org = g.get_organization(config['GITHUB_ORGANIZATION'])
-project = None
 
-for this_project in org.get_projects():
-    if this_project.name == config['GITHUB_PROJECT_NAME']:
-        project = this_project
-        break
+def initalize_github_obtain_project_column(config: dict) -> ProjectColumn:
+    g = Github(config['GITHUB_API_KEY'])
+    org = g.get_organization(config['GITHUB_ORGANIZATION'])
+    project = None
 
-assert project is not None, f"Project '{config['GITHUB_PROJECT_NAME']}' was not found in the organization, please verify configuration."
+    for this_project in org.get_projects():
+        if this_project.name == config['GITHUB_PROJECT_NAME']:
+            project = this_project
+            break
 
-project_column = None
+    assert project is not None, f"Project '{config['GITHUB_PROJECT_NAME']}' was not found in the organization, please verify configuration."
 
-for this_column in project.get_columns():
-    if this_column.name == config['GITHUB_PROJECT_FINISHED_COLUMN']:
-        project_column = this_column
-        break
+    project_column = None
 
-assert project_column is not None, f"Project column '{config['GITHUB_PROJECT_FINISHED_COLUMN']}' was not found in the project, please verify configuration."
+    for this_column in project.get_columns():
+        if this_column.name == config['GITHUB_PROJECT_FINISHED_COLUMN']:
+            project_column = this_column
+            break
 
-# https://stackoverflow.com/questions/47007720/set-selenium-chromedriver-userpreferences-to-save-as-pdf
-settings = {
-    "recentDestinations": [{
-        "id": "Save as PDF",
-        "origin": "local",
-        "account": "",
-    }],
-    "selectedDestinationId": "Save as PDF",
-    "version": 2
-}
+    assert project_column is not None, f"Project column '{config['GITHUB_PROJECT_FINISHED_COLUMN']}' was not found in the project, please verify configuration."
 
-selection_rules = {
-    "kind": "local",
-    "idPattern": "*",
-    "namePattern": "Save as PDF"
-}
+    return project_column
 
-prefs = {
-    'printing.print_preview_sticky_settings.appState': json.dumps(settings), 
-    'printing.default_destination_selection_rules': json.dumps(selection_rules),
-    'savefile.default_directory': config['PDF_SAVE_PATH']
-}
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_experimental_option('prefs', prefs)
-chrome_options.add_argument('--kiosk-printing')
+def initialize_driver(config: dict) -> WebDriver:
+    # https://stackoverflow.com/questions/47007720/set-selenium-chromedriver-userpreferences-to-save-as-pdf
+    settings = {
+        "recentDestinations": [{
+            "id": "Save as PDF",
+            "origin": "local",
+            "account": "",
+        }],
+        "selectedDestinationId": "Save as PDF",
+        "version": 2
+    }
 
-driver = webdriver.Chrome(options=chrome_options)
+    selection_rules = {
+        "kind": "local",
+        "idPattern": "*",
+        "namePattern": "Save as PDF"
+    }
 
-driver.get("https://github.com/login")
-print("Please login to GitHub in the open window.")
+    prefs = {
+        'printing.print_preview_sticky_settings.appState': json.dumps(settings), 
+        'printing.default_destination_selection_rules': json.dumps(selection_rules),
+        'savefile.default_directory': config['PDF_SAVE_PATH']
+    }
+
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_experimental_option('prefs', prefs)
+    chrome_options.add_argument('--kiosk-printing')
+
+    driver = webdriver.Chrome(options=chrome_options)
+    
+    return driver
+
 
 class LoginTagHasValue(object):
     """ Validates that there is a meta tag with the name 'user-login' that also has non-zero-length content. """
@@ -88,23 +103,80 @@ class LoginTagHasValue(object):
         else:
             return False
 
-wait = ui.WebDriverWait(driver, timeout=INTERACTIVE_TIMEOUT)
-wait.until(LoginTagHasValue())
 
-issues = list()
+def wait_user_login(driver: WebDriver):
+    driver.get("https://github.com/login")
+    print("Please login to GitHub in the open window.")
 
-for card in project_column.get_cards():
-    this_issue = card.get_content()
-    issues.append((this_issue.title, this_issue.number))
-    driver.get(this_issue.html_url)
+    wait = ui.WebDriverWait(driver, timeout=INTERACTIVE_TIMEOUT)
+    wait.until(LoginTagHasValue())
 
-    try:
-        element = driver.find_element(By.CLASS_NAME, "markdown-title")
-    except NoSuchElementException:
-        print("Title at target URL doesn't match; we might not be logged in.")
-        break
 
-    driver.execute_script("window.print();")
+def fetch_all_issues(driver:WebDriver, project_column: ProjectColumn, print=True) -> list:
+    issues = list()
 
-driver.close()
+    for card in project_column.get_cards():
+        this_issue = card.get_content()
+        issues.append((this_issue.title, this_issue.number, this_issue.html_url))
+        
+        if print:
+            driver.get(this_issue.html_url)
+            driver.execute_script("window.print();")
 
+    return issues
+
+# https://github.com/python-openxml/python-docx/issues/610#issuecomment-458289054
+def add_hyperlink_into_run(paragraph, run, url):
+    runs = paragraph.runs
+    for i in range(len(runs)):
+        if runs[i].text == run.text:
+            break
+    # --- This gets access to the document.xml.rels file and gets a new relation id value ---
+    part = paragraph.part
+    r_id = part.relate_to(
+        url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True
+    )
+    # --- Create the w:hyperlink tag and add needed values ---
+    hyperlink = docx.oxml.shared.OxmlElement('w:hyperlink')
+    hyperlink.set(docx.oxml.shared.qn('r:id'), r_id, )
+    hyperlink.append(run._r)
+    paragraph._p.insert(i,hyperlink)
+    run.font.color.rgb = docx.shared.RGBColor(0, 0, 255)
+
+
+def add_issues_to_template(issues: list, config:dict) -> None:
+    document = Document(config['COVERPAGE_TEMPLATE_PATH'])
+
+    document.custom_properties['ClientName'] = config['CLIENT_NAME']
+    document.custom_properties['ClientContact'] = config['CLIENT_CONTACT']
+    document.custom_properties['ProjectName'] = config['PROJECT_NAME']
+
+    for title, number, url in issues:
+        p = document.add_paragraph(style="List Paragraph")
+        r = p.add_run()
+        r.add_text(f"#{number}")
+        add_hyperlink_into_run(p, r, url)
+        r = p.add_run()
+        r.add_text(f" - {title}")
+
+    document.add_paragraph("If you have any questions about the above, please do not hesitate to reach out.", style="Closing Paragraph")
+    document.add_paragraph("Thank you for your business.", style="Closing Paragraph")
+
+    document.save(config['OUTPUT_PATH'])
+    print("Don't forget to update fields before exporting!")
+
+
+if __name__ == '__main__':
+    print_enabled = False
+
+    config = process_configuration()
+    project_column = initalize_github_obtain_project_column(config)
+    if print_enabled:
+        driver = initialize_driver(config)
+        wait_user_login(driver)
+        issues = fetch_all_issues(driver, project_column, print=print_enabled)
+        driver.close()
+    else:
+        issues = fetch_all_issues(None, project_column, print=False)
+
+    add_issues_to_template(issues, config)

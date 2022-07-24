@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "maintenance-issue-report"
 version = "0.1.0"
-description = "An automation tool for generating PDF closed issue reports from a GitHub project."
+description = "A tool for generating PDF issue reports from a GitHub project."
 authors = ["Matthew Scheffel <matt@dataheck.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 numpy = "^1.23.1"
 pandas = "^1.4.3"
-python-docx = "^0.8.11"
+python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev = "981e38a" } # custom properties supported
 selenium = "^4.3.0"
 PyGithub = "^1.55"
 python-dotenv = "^0.20.0"
