@@ -12,6 +12,7 @@ python-docx = "^0.8.11"
 selenium = "^4.3.0"
 PyGithub = "^1.55"
 python-dotenv = "^0.20.0"
+chromedriver-binary = "103.0.5060.134.0" # match with your installed chrome version
 
 [tool.poetry.dev-dependencies]
 jupyterlab = "^3.4.4"
