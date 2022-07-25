@@ -1,13 +1,10 @@
 from docx import Document
 import docx
 from dotenv import load_dotenv
-from functools import reduce
 from github import Github, ProjectColumn
 from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 import chromedriver_binary # pylint: disable=unused-import
 import json
 import os
