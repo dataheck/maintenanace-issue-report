@@ -62,3 +62,5 @@ This tool uses a specific version of Chrome (103.0.5060.134.0) and a specific fo
 * Execute `maintenance-issue-report.py` with `python`. Specify --enable_print TRUE if you would like it to export PDFs of the issues.
 
 Selenium is not required if you do not indent to use the print to PDF functionality. 
+
+If you do use the PDF functionality, I recommend you merge the coverletter with all of the exported files into a single PDF. No user wants to have dozens of PDFs open!
