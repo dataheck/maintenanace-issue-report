@@ -145,6 +145,10 @@ def add_hyperlink_into_run(paragraph, run, url):
 
 
 def add_issues_to_template(issues: list, config:dict) -> None:
+    ''' Given a list of issues and a configuration dictionary, updates a docx template.
+
+    The docx template is assumed to have a "List Paragraph" and "Closing Paragraph" style.
+    '''
     document = Document(config['COVERPAGE_TEMPLATE_PATH'])
 
     document.custom_properties['ClientName'] = config['CLIENT_NAME']
@@ -167,7 +171,13 @@ def add_issues_to_template(issues: list, config:dict) -> None:
 
 
 if __name__ == '__main__':
-    print_enabled = False
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
+    parser.add_argument("--enable_print", type=bool, help="Enable printing all issues to separate PDF files", default=False)
+    args = parser.parse_args()
+
+    print_enabled = args.enable_print
 
     config = process_configuration()
     project_column = initalize_github_obtain_project_column(config)
