@@ -6,11 +6,11 @@ authors = ["Matthew Scheffel <matt@dataheck.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev = "981e38a" } # custom properties supported
+python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev = "a413b724468b9cfc9273349f7a91206200393920", branch = "master" } # custom properties supported
 selenium = "^4.3.0"
 PyGithub = "^1.55"
 python-dotenv = "^0.20.0"
-chromedriver-binary = "103.0.5060.134.0" # match with your installed chrome version
+chromedriver-binary = "105.0.5195.52.0" # match with your installed chrome version
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
