@@ -17,10 +17,10 @@ INTERACTIVE_TIMEOUT = 320 # seconds
 def process_configuration() -> dict:
     load_dotenv()
 
-    mandatory_configuration = (
+    mandatory_configuration = {
         'GITHUB_API_KEY', 'GITHUB_ORGANIZATION','GITHUB_PROJECT_NAME', 'GITHUB_PROJECT_FINISHED_COLUMN', 
         'PDF_SAVE_PATH', 'COVERPAGE_TEMPLATE_PATH', 'CLIENT_NAME', 'CLIENT_CONTACT', 'PROJECT_NAME', 'OUTPUT_PATH'
-    )
+    }
     config = dict()
 
     for key in mandatory_configuration:
@@ -171,12 +171,16 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
-    parser.add_argument("--enable_print", type=bool, help="Enable printing all issues to separate PDF files", default=False)
+    parser.add_argument("--enable-print", type=bool, help="Enable printing all issues to separate PDF files", default=False)
     args = parser.parse_args()
 
     print_enabled = args.enable_print
 
     config = process_configuration()
+
+    if print_enabled:
+        assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist - please create it or change the setting."
+
     project_column = initalize_github_obtain_project_column(config)
     if print_enabled:
         driver = initialize_driver(config)
