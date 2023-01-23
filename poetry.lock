@@ -52,7 +52,7 @@ unicode-backport = ["unicodedata2"]
 
 [[package]]
 name = "chromedriver-binary"
-version = "107.0.5304.62.0"
+version = "109.0.5414.74.0"
 description = "Installer for chromedriver."
 category = "main"
 optional = false
@@ -320,7 +320,7 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "03e416e7b15c2f6b349559bf04c5b8276365299158ce49849abbd94b211f6e6f"
+content-hash = "f4404fcb23e89100ee050d9ddac950dcaebf3975f0789feaf623c896b29ff2df"
 
 [metadata.files]
 async-generator = [
@@ -406,7 +406,7 @@ charset-normalizer = [
     {file = "charset_normalizer-2.1.1-py3-none-any.whl", hash = "sha256:83e9a75d1911279afd89352c68b45348559d1fc0506b054b346651b5e7fee29f"},
 ]
 chromedriver-binary = [
-    {file = "chromedriver-binary-107.0.5304.62.0.tar.gz", hash = "sha256:ebea7a12957f30c5ae201b50be07851aea89fcc7342d229b34323681097a19ca"},
+    {file = "chromedriver-binary-109.0.5414.74.0.tar.gz", hash = "sha256:9ca82bf39e1f745e0b71e44f773475f1fa2c29bdc24a3fa177fa1a6be595d14f"},
 ]
 deprecated = [
     {file = "Deprecated-1.2.13-py2.py3-none-any.whl", hash = "sha256:64756e3e14c8c5eea9795d93c524551432a0be75629f8f29e67ab8caf076c76d"},
