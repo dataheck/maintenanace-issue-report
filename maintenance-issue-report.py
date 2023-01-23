@@ -171,7 +171,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
-    parser.add_argument("--enable-print", type=bool, help="Enable printing all issues to separate PDF files", default=False)
+    parser.add_argument("--enable-print", help="Enable printing all issues to separate PDF files", action="store_true")
     args = parser.parse_args()
 
     print_enabled = args.enable_print
