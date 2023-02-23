@@ -1,11 +1,12 @@
 from docx import Document
-import docx
 from dotenv import load_dotenv
 from github import Github, ProjectColumn
+from pathlib import Path
 from selenium import webdriver
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
 import chromedriver_binary # pylint: disable=unused-import
+import docx
 import json
 import os
 import selenium.webdriver.support.ui as ui
@@ -179,7 +180,13 @@ if __name__ == '__main__':
     config = process_configuration()
 
     if print_enabled:
-        assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist - please create it or change the setting."
+        target_path = Path(config['PDF_SAVE_PATH'])
+
+        if not os.path.exists(target_path) and os.path.exists(target_path.parent):
+            print("Creating output directory.")
+            os.mkdir(target_path)
+    
+    assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist, nor does its parent - please create it or change the setting."
 
     project_column = initalize_github_obtain_project_column(config)
     if print_enabled:
