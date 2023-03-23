@@ -166,6 +166,8 @@ def add_issues_to_template(issues: list, config:dict) -> None:
 
     document.save(config['OUTPUT_PATH'])
     print("Don't forget to update fields before exporting!")
+    print("When joining the PDFs, be sure to do it in chronological order (based on the modified time of the exported files). This will ensure that the table of contents matches up with the order of attached pages.")
+    print("You will have to use an external tool to join the PDFs.")
 
 
 if __name__ == '__main__':
