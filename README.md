@@ -1,6 +1,8 @@
 # Issue Reporting for GitHub Projects
 
-I want my clients to have a good idea of what they are paying for when they have a maintenance contract with me. To make that easy for users that tend to not have GitHub accounts, I created this tool.
+I want my clients to have a good idea of what they are paying for when they have a maintenance contract with me. My primary project management tool is GitHub projects and issues, but clients tend to not be users of GitHub and their repositories are private. 
+
+This tool makes it easy for me to share the detail stored on GitHub in an business-friendly format that can be kept for accounting records.
 
 # Suitability
 
