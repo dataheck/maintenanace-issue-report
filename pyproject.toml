@@ -10,7 +10,7 @@ python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev 
 selenium = "^4.3.0"
 PyGithub = "^1.55"
 python-dotenv = "^0.20.0"
-chromedriver-binary = "^111.0.5563" # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
+chromedriver-binary = "^113.0.5672.63.0" # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
