@@ -8,9 +8,13 @@ authors = ["Matthew Scheffel <matt@dataheck.com>"]
 python = "^3.8"
 python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev = "a413b724468b9cfc9273349f7a91206200393920", branch = "master" } # custom properties supported
 selenium = "^4.3.0"
-PyGithub = "^1.55"
+PyGithub = "^1.59.1"
 python-dotenv = "^0.20.0"
-chromedriver-binary = "^115.0.5790.102.0 " # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
+chromedriver-binary = "^117.0.5938.92" # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
+gql = {extras = ["requests"], version = "^3.4.1"}
+
+[tool.poetry.dev-dependencies]
+ipykernel = "^6.25.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,10 +1,13 @@
 from docx import Document
 from dotenv import load_dotenv
-from github import Github, ProjectColumn
+from github import Github, ProjectColumn, Consts
+from gql import Client, gql
+from gql.transport.requests import RequestsHTTPTransport
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from string import Template
 import chromedriver_binary # pylint: disable=unused-import
 import docx
 import json
@@ -15,11 +18,12 @@ PRINT_DIALOG_DELAY = 3000 # milliseconds
 PRINT_SAVE_DELAY = 500    # milliseconds
 INTERACTIVE_TIMEOUT = 320 # seconds
 
+
 def process_configuration() -> dict:
     load_dotenv()
 
     mandatory_configuration = {
-        'GITHUB_API_KEY', 'GITHUB_ORGANIZATION','GITHUB_PROJECT_NAME', 'GITHUB_PROJECT_FINISHED_COLUMN', 
+        'GITHUB_API_KEY', 'GITHUB_ORGANIZATION', 'GITHUB_PROJECT_NUMBER', 'GITHUB_PROJECT_FINISHED_COLUMN', 'GITHUB_PROJECT_NAME',
         'PDF_SAVE_PATH', 'COVERPAGE_TEMPLATE_PATH', 'CLIENT_NAME', 'CLIENT_CONTACT', 'PROJECT_NAME', 'OUTPUT_PATH'
     }
     config = dict()
@@ -32,12 +36,49 @@ def process_configuration() -> dict:
     return config
 
 
+# For "projectsV2"
+# assumes organization rather than user project
+def initialize_github_obtain_project_column_graphql(config: dict) -> ProjectColumn:
+    transport = RequestsHTTPTransport(
+        url=Consts.DEFAULT_BASE_URL + "/graphql",
+        headers={"Authorization": f"Bearer {config['GITHUB_API_KEY']}"},
+    )
+    
+    client = Client(transport=transport, fetch_schema_from_transport=True)
+
+    # you can find the project number by going to the project page and looking at the URL
+
+    # get node ID for the target project
+    project_node_id_query = Template("""
+        query{ 
+                organization(login: \"$organization\") {
+                    projectV2(number: $project_number){id}
+                }
+        }
+    """)
+
+    query = gql(
+        project_node_id_query.substitute(
+            organization=config['GITHUB_ORGANIZATION'], 
+            project_number=config['GITHUB_PROJECT_NUMBER']
+        )
+    )
+
+    result = client.execute(query)
+    project_node_id = result['projectV2']['id']
+
+
+
+    print(result)
+
+
 def initalize_github_obtain_project_column(config: dict) -> ProjectColumn:
     g = Github(config['GITHUB_API_KEY'])
     org = g.get_organization(config['GITHUB_ORGANIZATION'])
     project = None
 
     for this_project in org.get_projects():
+        print(this_project)
         if this_project.name == config['GITHUB_PROJECT_NAME']:
             project = this_project
             break
@@ -84,9 +125,9 @@ def initialize_driver(config: dict) -> WebDriver:
     chrome_options.add_experimental_option('prefs', prefs)
     chrome_options.add_argument('--kiosk-printing')
 
-    driver = webdriver.Chrome(options=chrome_options)
+    this_driver = webdriver.Chrome(options=chrome_options)
     
-    return driver
+    return this_driver
 
 
 class LoginTagHasValue(object):
@@ -94,8 +135,8 @@ class LoginTagHasValue(object):
     def __init__(self, meta_name='user-login'):
         self.meta_name = meta_name
     
-    def __call__(self, driver):
-        element = driver.find_element(By.XPATH, f"//meta[@name='{self.meta_name}']")
+    def __call__(self, this_driver):
+        element = this_driver.find_element(By.XPATH, f"//meta[@name='{self.meta_name}']")
         if len(element.get_attribute("content")) > 0:
             return element
         else:
@@ -122,6 +163,7 @@ def fetch_all_issues(driver:WebDriver, project_column: ProjectColumn, print=True
             driver.execute_script("window.print();")
 
     return issues
+
 
 # https://github.com/python-openxml/python-docx/issues/610#issuecomment-458289054
 def add_hyperlink_into_run(paragraph, run, url):
@@ -187,7 +229,7 @@ if __name__ == '__main__':
         if not os.path.exists(target_path) and os.path.exists(target_path.parent):
             print("Creating output directory.")
             os.mkdir(target_path)
-    
+        
     assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist, nor does its parent - please create it or change the setting."
 
     project_column = initalize_github_obtain_project_column(config)
