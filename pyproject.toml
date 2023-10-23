@@ -10,7 +10,7 @@ python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev 
 selenium = "^4.3.0"
 PyGithub = "^1.59.1"
 python-dotenv = "^0.20.0"
-chromedriver-binary = "^117.0.5938.92" # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
+chromedriver-binary = "^118.0.5993.70.0" # match with your installed chrome version; see https://pypi.org/project/chromedriver-binary/#history
 gql = {extras = ["requests"], version = "^3.4.1"}
 
 [tool.poetry.dev-dependencies]
