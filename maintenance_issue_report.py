@@ -1,18 +1,20 @@
+import json
+import os
+from pathlib import Path
+from string import Template
+
+import chromedriver_autoinstaller
+import docx
 from docx import Document
 from dotenv import load_dotenv
 from github import Github, ProjectColumn, Consts
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
-from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webdriver import WebDriver
-from string import Template
-import chromedriver_binary # pylint: disable=unused-import
-import docx
-import json
-import os
 import selenium.webdriver.support.ui as ui
+from selenium.webdriver.remote.webdriver import WebDriver
+
 
 PRINT_DIALOG_DELAY = 3000 # milliseconds
 PRINT_SAVE_DELAY = 500    # milliseconds
@@ -66,8 +68,6 @@ def initialize_github_obtain_project_column_graphql(config: dict) -> ProjectColu
 
     result = client.execute(query)
     project_node_id = result['projectV2']['id']
-
-
 
     print(result)
 
@@ -214,6 +214,8 @@ def add_issues_to_template(issues: list, config:dict) -> None:
 
 if __name__ == '__main__':
     import argparse
+
+    chromedriver_autoinstaller.install()
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
     parser.add_argument("--enable-print", help="Enable printing all issues to separate PDF files", action="store_true")
