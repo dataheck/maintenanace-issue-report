@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 from pathlib import Path
@@ -151,14 +152,14 @@ def wait_user_login(driver: WebDriver):
     wait.until(LoginTagHasValue())
 
 
-def fetch_all_issues(driver:WebDriver, project_column: ProjectColumn, print=True) -> list:
+def fetch_all_issues(driver:WebDriver, project_column: ProjectColumn, enable_print=True) -> list:
     issues = list()
 
     for card in project_column.get_cards():
         this_issue = card.get_content()
         issues.append((this_issue.title, this_issue.number, this_issue.html_url))
         
-        if print:
+        if enable_print:
             driver.get(this_issue.html_url)
             driver.execute_script("window.print();")
 
@@ -212,9 +213,7 @@ def add_issues_to_template(issues: list, config:dict) -> None:
     print("You will have to use an external tool to join the PDFs.")
 
 
-if __name__ == '__main__':
-    import argparse
-
+def main():
     chromedriver_autoinstaller.install()
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
@@ -244,3 +243,6 @@ if __name__ == '__main__':
         issues = fetch_all_issues(None, project_column, print=False)
 
     add_issues_to_template(issues, config)
+
+if __name__ == '__main__':
+    main()
