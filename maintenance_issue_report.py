@@ -237,10 +237,10 @@ def main():
     if print_enabled:
         driver = initialize_driver(config)
         wait_user_login(driver)
-        issues = fetch_all_issues(driver, project_column, print=print_enabled)
+        issues = fetch_all_issues(driver, project_column, enable_print=print_enabled)
         driver.close()
     else:
-        issues = fetch_all_issues(None, project_column, print=False)
+        issues = fetch_all_issues(None, project_column, enable_print=False)
 
     add_issues_to_template(issues, config)
 
