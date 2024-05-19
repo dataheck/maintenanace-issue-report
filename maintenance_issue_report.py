@@ -8,7 +8,7 @@ import chromedriver_autoinstaller
 import docx
 from docx import Document
 from dotenv import load_dotenv
-from github import Github, ProjectColumn, Consts
+from github import Consts
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 from selenium import webdriver
@@ -26,7 +26,7 @@ def process_configuration() -> dict:
     load_dotenv()
 
     mandatory_configuration = {
-        'GITHUB_API_KEY', 'GITHUB_ORGANIZATION', 'GITHUB_PROJECT_NUMBER', 'GITHUB_PROJECT_FINISHED_COLUMN', 'GITHUB_PROJECT_NAME',
+        'GITHUB_API_KEY', 'GITHUB_ORGANIZATION', 'GITHUB_PROJECT_NUMBER', 'GITHUB_PROJECT_FINISHED_COLUMN',
         'PDF_SAVE_PATH', 'COVERPAGE_TEMPLATE_PATH', 'CLIENT_NAME', 'CLIENT_CONTACT', 'PROJECT_NAME', 'OUTPUT_PATH'
     }
     config = dict()
@@ -39,9 +39,32 @@ def process_configuration() -> dict:
     return config
 
 
+def process_graphql_project_items(result: dict , config: dict) -> list:
+    completed_issues = list()
+
+    for node in result['organization']['projectV2']['items']['nodes']:
+        this_column = None
+        for project_node in node['content']['projectItems']['nodes']:
+            if project_node['fieldValueByName'] is not None:
+                this_column = project_node['fieldValueByName']['name']
+        
+        assert this_column is not None, "Could not determine column for item"
+
+        if this_column == config['GITHUB_PROJECT_FINISHED_COLUMN']:
+            completed_issues.append({
+                'url': node['content']['url'],
+                'title': node['content']['title'],
+                'number': node['content']['number'],
+                'closedAt': node['content']['closedAt']
+            })
+    
+    completed_issues = sorted(completed_issues, key=lambda x: x['closedAt'], reverse=True)
+
+    return completed_issues
+
 # For "projectsV2"
 # assumes organization rather than user project
-def initialize_github_obtain_project_column_graphql(config: dict) -> ProjectColumn:
+def initialize_github_obtain_project_column_graphql(config: dict) -> list:
     transport = RequestsHTTPTransport(
         url=Consts.DEFAULT_BASE_URL + "/graphql",
         headers={"Authorization": f"Bearer {config['GITHUB_API_KEY']}"},
@@ -50,52 +73,60 @@ def initialize_github_obtain_project_column_graphql(config: dict) -> ProjectColu
     client = Client(transport=transport, fetch_schema_from_transport=True)
 
     # you can find the project number by going to the project page and looking at the URL
-
-    # get node ID for the target project
-    project_node_id_query = Template("""
-        query{ 
-                organization(login: \"$organization\") {
-                    projectV2(number: $project_number){id}
+    project_items_query = Template("""
+        query {
+            organization(login: \"$organization\") {
+                projectV2(number: $project_number) {
+                    items(first: 100, orderBy: {field: POSITION, direction: DESC }) {
+                        nodes {
+                            content {
+                                ... on Issue {
+                                    title
+                                    url
+                                    closedAt
+                                    number
+                                    projectItems(first: 100) {
+                                        nodes {
+                                            fieldValueByName(name: "Status") {
+                                                ... on ProjectV2ItemFieldSingleSelectValue {
+                                                name
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                ... on PullRequest {
+                                    title
+                                    url
+                                    projectItems(first: 100) {
+                                        nodes {
+                                            fieldValueByName(name: "Status") {
+                                                ... on ProjectV2ItemFieldSingleSelectValue {
+                                                    name
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            }
         }
     """)
 
     query = gql(
-        project_node_id_query.substitute(
+        project_items_query.substitute(
             organization=config['GITHUB_ORGANIZATION'], 
             project_number=config['GITHUB_PROJECT_NUMBER']
         )
     )
 
-    result = client.execute(query)
-    project_node_id = result['projectV2']['id']
+    result : dict = client.execute(query)
+    closed_issues = process_graphql_project_items(result, config)
 
-    print(result)
-
-
-def initalize_github_obtain_project_column(config: dict) -> ProjectColumn:
-    g = Github(config['GITHUB_API_KEY'])
-    org = g.get_organization(config['GITHUB_ORGANIZATION'])
-    project = None
-
-    for this_project in org.get_projects():
-        print(this_project)
-        if this_project.name == config['GITHUB_PROJECT_NAME']:
-            project = this_project
-            break
-
-    assert project is not None, f"Project '{config['GITHUB_PROJECT_NAME']}' was not found in the organization, please verify configuration."
-
-    project_column = None
-
-    for this_column in project.get_columns():
-        if this_column.name == config['GITHUB_PROJECT_FINISHED_COLUMN']:
-            project_column = this_column
-            break
-
-    assert project_column is not None, f"Project column '{config['GITHUB_PROJECT_FINISHED_COLUMN']}' was not found in the project, please verify configuration."
-
-    return project_column
+    return closed_issues
 
 
 def initialize_driver(config: dict) -> WebDriver:
@@ -152,15 +183,15 @@ def wait_user_login(driver: WebDriver):
     wait.until(LoginTagHasValue())
 
 
-def fetch_all_issues(driver:WebDriver, project_column: ProjectColumn, enable_print=True) -> list:
+def fetch_all_issues(driver:WebDriver, config:dict, enable_print=True) -> list:
+    raw_issues = initialize_github_obtain_project_column_graphql(config)
     issues = list()
 
-    for card in project_column.get_cards():
-        this_issue = card.get_content()
-        issues.append((this_issue.title, this_issue.number, this_issue.html_url))
+    for issue in raw_issues:
+        issues.append((issue['title'], issue['number'], issue['url']))
         
         if enable_print:
-            driver.get(this_issue.html_url)
+            driver.get(issue['url'])
             driver.execute_script("window.print();")
 
     return issues
@@ -233,14 +264,13 @@ def main():
         
     assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist, nor does its parent - please create it or change the setting."
 
-    project_column = initalize_github_obtain_project_column(config)
     if print_enabled:
         driver = initialize_driver(config)
         wait_user_login(driver)
-        issues = fetch_all_issues(driver, project_column, enable_print=print_enabled)
+        issues = fetch_all_issues(driver, config, enable_print=print_enabled)
         driver.close()
     else:
-        issues = fetch_all_issues(None, project_column, enable_print=False)
+        issues = fetch_all_issues(None, config, enable_print=False)
 
     add_issues_to_template(issues, config)
 

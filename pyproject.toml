@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "maintenance-issue-report"
-version = "1.0.0"
+version = "2.0.0"
 description = "A tool for generating PDF issue reports from a GitHub project."
 authors = ["Matthew Scheffel <matt@dataheck.com>"]
 

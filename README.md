@@ -25,7 +25,7 @@ Configuration is handled via `dotenv`. Here are the configuration variables:
 |---------------|-------------|
 | GITHUB_API_KEY | An API key for GitHub that has access to GITHUB_ORGANIZATION and GITHUB_PROJECT_NAME. |
 | GITHUB_ORGANIZATION | The name of the organization GITHUB_PROJECT_NAME is a child of |
-| GITHUB_PROJECT_NAME | The name of the project that all tracked issues are a child of | 
+| GITHUB_PROJECT_NUMBER | The number that appears at the end of the URL to its dashboard | 
 | GITHUB_PROJECT_FINISHED_COLUMN | The column of the project that tracks finished items. For example, "Done" |
 | PDF_SAVE_PATH | The path to an existing directory where all PDFs will be "printed" to |
 | COVERPAGE_TEMPLATE_PATH | The path to a Word .docx file that meets our expectations. See Template Expectations, below. | 
@@ -50,7 +50,9 @@ The .docx template is assumed to have the following properties:
 
 You must update your custom fields after producing a file with this tool. You can do this in Microsoft Word by pressing `CTRL+A` to select everything followed by pressing `F9` to update fields.
 
-This tool uses a specific version of Chrome (103.0.5060.134.0) and a specific fork of `python-docx` (by @michael-koeller and @renejsum), for custom properties support).
+This tool uses a specific version of Chrome (103.0.5060.134.0) and a specific fork of `python-docx` (by @michael-koeller and @renejsum), for custom properties support.
+
+Version 2.0.0 of this tool has dropped support for legacy projects in favour of the new project system accessible only via GraphQL. 
 
 # Installation / Requirements
 
