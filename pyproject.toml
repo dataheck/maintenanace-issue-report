@@ -6,12 +6,12 @@ authors = ["Matthew Scheffel <matt@dataheck.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-python-docx = { git = "https://github.com/michael-koeller/python-docx.git", rev = "24086982e797c667d64d031753e56f6ad30d765a", branch = "feature/custom_properties" } # custom properties supported
+python-docx = { git = "https://github.com/isosphere/python-docx.git", rev = "24086982e797c667d64d031753e56f6ad30d765a", branch = "feature/custom_properties" } # custom properties supported
 selenium = "^4.3.0"
 PyGithub = "^1.59.1"
 python-dotenv = "^0.20.0"
 gql = {extras = ["requests"], version = "^3.4.1"}
-chromedriver-autoinstaller = "^0.6.3"
+chromedriver-autoinstaller = "^0.6.4"
 
 [tool.poetry.dev-dependencies]
 ipykernel = "^6.25.1"
