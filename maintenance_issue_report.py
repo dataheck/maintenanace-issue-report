@@ -22,8 +22,8 @@ PRINT_SAVE_DELAY = 500    # milliseconds
 INTERACTIVE_TIMEOUT = 320 # seconds
 
 
-def process_configuration() -> dict:
-    load_dotenv()
+def process_configuration(env_path: str) -> dict:
+    load_dotenv(dotenv_path=env_path)
 
     mandatory_configuration = {
         'GITHUB_API_KEY', 'GITHUB_ORGANIZATION', 'GITHUB_PROJECT_NUMBER', 'GITHUB_PROJECT_FINISHED_COLUMN',
@@ -249,11 +249,12 @@ def main():
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
     parser.add_argument("--enable-print", help="Enable printing all issues to separate PDF files", action="store_true")
+    parser.add_argument("--env", help="Path to .env file", default=".env")
     args = parser.parse_args()
 
     print_enabled = args.enable_print
 
-    config = process_configuration()
+    config = process_configuration(env_path=args.env)
 
     if print_enabled:
         target_path = Path(config['PDF_SAVE_PATH'])
