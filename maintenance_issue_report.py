@@ -15,6 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import selenium.webdriver.support.ui as ui
 from selenium.webdriver.remote.webdriver import WebDriver
+from time import sleep
 
 
 PRINT_DIALOG_DELAY = 3000 # milliseconds
@@ -192,7 +193,9 @@ def fetch_all_issues(driver:WebDriver, config:dict, enable_print=True) -> list:
         
         if enable_print:
             driver.get(issue['url'])
+            sleep(1) # otherwise we tend to miss the print dialog, sometimes.
             driver.execute_script("window.print();")
+            sleep(0.5) # otherwise we tend to miss the print dialog, sometimes.
 
     return issues
 
