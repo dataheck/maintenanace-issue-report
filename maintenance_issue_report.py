@@ -266,7 +266,7 @@ def main():
             print("Creating output directory.")
             os.mkdir(target_path)
         
-    assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist, nor does its parent - please create it or change the setting."
+    assert os.path.exists(target_path), "Output location does not exist, nor does its parent - please create it or change the setting."
 
     if print_enabled:
         driver = initialize_driver(config)
