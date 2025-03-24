@@ -3,8 +3,10 @@ name = "maintenance-issue-report"
 version = "2.0.0"
 description = "A tool for generating PDF issue reports from a GitHub project."
 authors = ["Matthew Scheffel <matt@dataheck.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
+cffi = "^1.17"
 python = "^3.8"
 python-docx = { git = "https://github.com/isosphere/python-docx.git", rev = "24086982e797c667d64d031753e56f6ad30d765a", branch = "feature/custom_properties" } # custom properties supported
 selenium = "^4.3.0"
