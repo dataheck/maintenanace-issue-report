@@ -15,6 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import selenium.webdriver.support.ui as ui
 from selenium.webdriver.remote.webdriver import WebDriver
+from time import sleep
 
 
 PRINT_DIALOG_DELAY = 3000 # milliseconds
@@ -22,8 +23,8 @@ PRINT_SAVE_DELAY = 500    # milliseconds
 INTERACTIVE_TIMEOUT = 320 # seconds
 
 
-def process_configuration() -> dict:
-    load_dotenv()
+def process_configuration(env_path: str) -> dict:
+    load_dotenv(dotenv_path=env_path)
 
     mandatory_configuration = {
         'GITHUB_API_KEY', 'GITHUB_ORGANIZATION', 'GITHUB_PROJECT_NUMBER', 'GITHUB_PROJECT_FINISHED_COLUMN',
@@ -192,7 +193,9 @@ def fetch_all_issues(driver:WebDriver, config:dict, enable_print=True) -> list:
         
         if enable_print:
             driver.get(issue['url'])
+            sleep(1) # otherwise we tend to miss the print dialog, sometimes.
             driver.execute_script("window.print();")
+            sleep(0.5) # otherwise we tend to miss the print dialog, sometimes.
 
     return issues
 
@@ -249,11 +252,12 @@ def main():
 
     parser = argparse.ArgumentParser(description="Collect GitHub project issues into a Word template.")
     parser.add_argument("--enable-print", help="Enable printing all issues to separate PDF files", action="store_true")
+    parser.add_argument("--env", help="Path to .env file", default=".env")
     args = parser.parse_args()
 
     print_enabled = args.enable_print
 
-    config = process_configuration()
+    config = process_configuration(env_path=args.env)
 
     if print_enabled:
         target_path = Path(config['PDF_SAVE_PATH'])
@@ -262,7 +266,7 @@ def main():
             print("Creating output directory.")
             os.mkdir(target_path)
         
-    assert os.path.exists(config['PDF_SAVE_PATH']), "Output location does not exist, nor does its parent - please create it or change the setting."
+    assert os.path.exists(target_path), "Output location does not exist, nor does its parent - please create it or change the setting."
 
     if print_enabled:
         driver = initialize_driver(config)

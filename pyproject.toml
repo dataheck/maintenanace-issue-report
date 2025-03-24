@@ -13,7 +13,7 @@ python-dotenv = "^0.20.0"
 gql = {extras = ["requests"], version = "^3.4.1"}
 chromedriver-autoinstaller = "^0.6.4"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 ipykernel = "^6.25.1"
 
 [build-system]
