@@ -1,14 +1,12 @@
 # Issue Reporting for GitHub Projects
 
-I want my clients to have a good idea of what they are paying for when they have a maintenance contract with me. My primary project management tool is GitHub projects and issues, but clients tend to not be users of GitHub and their repositories are private. 
-
-This tool makes it easy for me to share the detail stored on GitHub in an business-friendly format that can be kept for accounting records.
+This tool makes it easy to share the detail stored in GitHub issues in an business-friendly format that can be kept for accounting records.
 
 # Suitability
 
-Here's my rough workflow - if it's similar to yours then you might benefit from this tool:
+This tool assumes the following workflow:
 - Issues are added to a project specific for maintenance tracking, which is under an organization
-- The project has a "Done" column which is cleared after every billing cycle
+- The project has a column representing closed issues which is cleared after every billing cycle
 - At the end of every billing cycle a report is sent with a list of all completed issues for that cycle
 
 This tool has two features that help with this:
@@ -67,4 +65,4 @@ Version 2.0.0 of this tool has dropped support for legacy projects in favour of 
 
 Selenium is not required if you do not indent to use the print to PDF functionality. 
 
-If you do use the PDF functionality, I recommend you merge the coverletter with all of the exported files into a single PDF. No user wants to have dozens of PDFs open!
+If you do use the PDF functionality, I recommend you merge the cover letter with all of the exported files into a single PDF. No user wants to have dozens of PDFs open!
